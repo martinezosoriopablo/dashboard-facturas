@@ -14,8 +14,9 @@ st.set_page_config(layout="wide")
 st.title("Dashboard de Financiamiento de Facturas")
 
 # === RUTAS POR DEFECTO ===
-DEFAULT_FACTURAS = "data/facturas_ejemplo.xlsx"
-DEFAULT_TASAS = "data/estructura_tasas.xlsx"
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_FACTURAS = os.path.join(BASE_DIR, "data", "facturas_ejemplo.xlsx")
+DEFAULT_TASAS = os.path.join(BASE_DIR, "data", "estructura_tasas.xlsx")
 
 # === SIDEBAR ===
 with st.sidebar:
@@ -25,9 +26,14 @@ with st.sidebar:
 
 # Usar archivos por defecto si no se suben
 if not archivo and os.path.exists(DEFAULT_FACTURAS):
-    archivo = open(DEFAULT_FACTURAS, "rb")
+    with open(DEFAULT_FACTURAS, "rb") as f:
+        archivo = BytesIO(f.read())
+        archivo.name = "facturas_ejemplo.xlsx"
+
 if not archivo_tasas and os.path.exists(DEFAULT_TASAS):
-    archivo_tasas = open(DEFAULT_TASAS, "rb")
+    with open(DEFAULT_TASAS, "rb") as f:
+        archivo_tasas = BytesIO(f.read())
+        archivo_tasas.name = "estructura_tasas.xlsx"
 
 # === MAIN ===
 if archivo:
