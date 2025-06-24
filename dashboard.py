@@ -8,15 +8,26 @@ import pandas as pd
 import plotly.express as px
 from datetime import datetime
 from io import BytesIO
+import os
 
 st.set_page_config(layout="wide")
 st.title("Dashboard de Financiamiento de Facturas")
+
+# === RUTAS POR DEFECTO ===
+DEFAULT_FACTURAS = "data/facturas_ejemplo.xlsx"
+DEFAULT_TASAS = "data/estructura_tasas.xlsx"
 
 # === SIDEBAR ===
 with st.sidebar:
     st.header("Carga de datos")
     archivo = st.file_uploader("Archivo Excel de facturas", type=["xlsx"], key="facturas")
     archivo_tasas = st.file_uploader("Estructura de tasas", type=["xlsx"], key="tasas")
+
+# Usar archivos por defecto si no se suben
+if not archivo and os.path.exists(DEFAULT_FACTURAS):
+    archivo = open(DEFAULT_FACTURAS, "rb")
+if not archivo_tasas and os.path.exists(DEFAULT_TASAS):
+    archivo_tasas = open(DEFAULT_TASAS, "rb")
 
 # === MAIN ===
 if archivo:
@@ -71,7 +82,7 @@ if archivo:
             return tasas_df.loc[riesgo, "150 dias"]
 
         df["Tasa Aplicada"] = df.apply(lambda row: buscar_tasa(row["Riesgo"], row["Dias_al_Vencimiento"]), axis=1)
-        df["Tasa Aplicada"] = df["Tasa Aplicada"] / 100  # División de tasa por 100 para formato porcentaje
+        df["Tasa Aplicada"] = df["Tasa Aplicada"] / 100
 
     df_filtrado = df.copy()
     if exportador != "Todos":
@@ -90,14 +101,12 @@ if archivo:
     porcentaje_pagadas = df_filtrado[df_filtrado["Pagado"] == "Sí"]["Valor Factura (USD)"].sum() / total_monto if total_monto > 0 else 0
     porcentaje_atrasadas = 1 - porcentaje_pagadas
 
-    # Estadísticas adicionales
     plazo_max = df_filtrado["Dias_al_Vencimiento"].max()
     plazo_min = df_filtrado["Dias_al_Vencimiento"].min()
     tasa_max = df_filtrado["Tasa Aplicada"].max()
     tasa_min = df_filtrado["Tasa Aplicada"].min()
     haircut_max = df_filtrado["Haircut"].max()
 
-    # === MÉTRICAS ===
     col_a, col_b, col_c, col_d, col_e = st.columns(5)
     col_a.metric("Monto total de facturas", f"${total_monto:,.0f}")
     col_b.metric("Facturas Financiables", f"${df_filtrado['Valor Factura (USD)'].sum():,.0f}")
@@ -120,7 +129,6 @@ if archivo:
     col_n.metric("Tasa Mínima Aplicada", f"{tasa_min:.2%}" if tasa_min else "N/A")
     col_o.metric("% Haircut Máximo", f"{haircut_max:.2%}")
 
-    # === GRÁFICOS ===
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("Distribución por estado")
@@ -173,4 +181,4 @@ if archivo:
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 else:
-    st.info("Por favor, sube el archivo Excel para comenzar.")
+    st.info("Por favor, sube el archivo Excel para comenzar o asegúrate que estén los archivos por defecto en la carpeta 'data/'.")
