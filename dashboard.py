@@ -99,10 +99,11 @@ if archivo:
         df_filtrado = df_filtrado[df_filtrado["Estado"] == estado]
 
     total_monto = df_filtrado["Valor Factura (USD)"].sum()
+    facturas_financiables = df_filtrado[df_filtrado["Estado"] != "No Financiable"]["Valor Factura (USD)"].sum()
     total_financiado = df_filtrado["Monto Financiado (USD)"].sum()
     tasa_promedio = df_filtrado["Tasa Aplicada"].mean() if "Tasa Aplicada" in df_filtrado.columns else None
     haircut_promedio = df_filtrado["Haircut"].mean()
-    porcentaje_financiado = total_financiado / total_monto if total_monto > 0 else 0
+    porcentaje_financiado = total_financiado / facturas_financiables if facturas_financiables > 0 else 0
     duracion_promedio = df_filtrado["Dias_al_Vencimiento"].mean()
     porcentaje_pagadas = df_filtrado[df_filtrado["Pagado"] == "Sí"]["Valor Factura (USD)"].sum() / total_monto if total_monto > 0 else 0
     porcentaje_atrasadas = 1 - porcentaje_pagadas
@@ -115,7 +116,7 @@ if archivo:
 
     col_a, col_b, col_c, col_d, col_e = st.columns(5)
     col_a.metric("Monto total de facturas", f"${total_monto:,.0f}")
-    col_b.metric("Facturas Financiables", f"${df_filtrado['Valor Factura (USD)'].sum():,.0f}")
+    col_b.metric("Facturas Financiables", f"${facturas_financiables:,.0f}")
     col_c.metric("Financiamiento solicitado", f"${total_financiado:,.0f}")
     col_d.metric("Tasa de Interés Promedio", f"{tasa_promedio:.2%}" if tasa_promedio else "N/A")
     col_e.metric("% Haircut Promedio", f"{haircut_promedio:.2%}")
